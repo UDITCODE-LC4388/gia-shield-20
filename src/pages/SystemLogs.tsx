@@ -13,8 +13,9 @@ interface SystemLog {
   created_at: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 export default function SystemLogs() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -24,12 +25,21 @@ export default function SystemLogs() {
     async function fetchLogs() {
       try {
         setLoading(true);
+        if (USE_MOCKS) {
+          setLogs([
+            { id: "1", event_type: "LOGIN", description: "Officer logged into dashboard", officer_id: "OFF_001", district: "Mysuru", severity: "INFO", created_at: new Date().toISOString() },
+            { id: "2", event_type: "VERIFY", description: "High risk anomaly detected in AADH201", officer_id: "OFF_002", district: "Belagavi", severity: "WARN", created_at: new Date(Date.now() - 500000).toISOString() },
+            { id: "3", event_type: "SECURITY", description: "System level breach attempt blocked", officer_id: "SYS", district: "Global", severity: "CRITICAL", created_at: new Date(Date.now() - 1000000).toISOString() }
+          ]);
+          return;
+        }
+
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/system_logs?order=created_at.desc&limit=25&select=*`,
           { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }}
         );
         const data = await res.json();
-        setLogs(data);
+        setLogs(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -71,7 +81,7 @@ export default function SystemLogs() {
                     <RefreshCw size={14} className="animate-spin" />
                     <span>SYNCHRONIZING_AUDIT_LOG_BUFFER...</span>
                 </div>
-            ) : logs.map((log) => {
+            ) : logs.length > 0 ? Array.isArray(logs) && logs.map((log) => {
                const colorClass = log.severity === 'CRITICAL' ? 'text-red-400' 
                                 : log.severity === 'WARN' ? 'text-amber-400' 
                                 : 'text-emerald-400';
@@ -85,7 +95,15 @@ export default function SystemLogs() {
                      <span className={`${colorClass} shrink-0 font-bold tracking-widest`}>[{log.severity}]</span>
                   </div>
                );
-            })}
+            }) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-white/20">
+                    <ShieldAlert size={48} strokeWidth={1} />
+                    <p className="text-xs uppercase tracking-[0.3em] font-black">No Audit Records Synchronized</p>
+                    <p className="text-[10px] text-white/10 max-w-xs text-center leading-relaxed">
+                        The system_logs table could not be reached. Verify database connectivity and schema migrations.
+                    </p>
+                </div>
+            )}
          </div>
 
          <div className="bg-navy border-t border-navy-light px-6 py-3 flex gap-8">

@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+// Using native fetch from Node.js (available in v18+)
 
 const SUPABASE_URL = 'https://xumlcfkmrlbwarbarpha.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bWxjZmttcmxid2FyYmFycGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzYzMjQsImV4cCI6MjA5MDU1MjMyNH0.wMmmgFAyn6wyT7eypco_utOvY9MzFBT7MQlBaf4oB9o';
