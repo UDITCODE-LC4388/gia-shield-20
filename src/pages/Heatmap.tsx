@@ -2,8 +2,14 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DistrictGridMap } from "@/components/charts/DistrictGridMap";
-import { Map, AlertCircle } from "lucide-react";
+import { Map, AlertCircle, Sparkles } from "lucide-react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+<<<<<<< HEAD
+=======
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+>>>>>>> 36e2a4b442043003667da50e1773e0f7cecf923d
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
@@ -26,6 +32,7 @@ const topDistricts = [
 export default function Heatmap() {
   const [districtStats, setDistrictStats] = useState<DistrictStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHeatmapData() {
@@ -100,6 +107,23 @@ export default function Heatmap() {
       }
     }
     loadHeatmapData();
+
+    // AI Predictive Geo-Analyst
+    setTimeout(async () => {
+      if (USE_MOCKS || !GEMINI_API_KEY) {
+        setAiAnalysis("Spatio-temporal analysis indicates high-risk saturation in the Northern Corridor. Recommend immediate cross-district task force mobilization for Belagavi and Kalaburagi segments.");
+        return;
+      }
+      try {
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = `Act as a geospatial fraud expert. Analyze these district fraud rates for Karnataka GIA: Kalaburagi (67%), Bidar (67%), Raichur (64%), Belagavi (40%). Provide a 1-sentence predictive warning and 1-sentence tactical recommendation for field deployment.`;
+        const response = await model.generateContent(prompt);
+        setAiAnalysis(response.response.text());
+      } catch (e) {
+        setAiAnalysis("Spatio-temporal analysis indicates high-risk saturation in the Northern Corridor. Recommend immediate cross-district task force mobilization for Belagavi and Kalaburagi segments.");
+      }
+    }, 2000);
   }, []);
 
   return (
@@ -147,14 +171,15 @@ export default function Heatmap() {
         </div>
       </div>
 
-      <div className="card-gov border-l-4 border-gov-accent">
+      <div className="card-gov border-l-4 border-gov-accent bg-navy/5">
         <div className="flex gap-4 items-start">
-          <AlertCircle className="text-gov-accent flex-shrink-0" size={20} />
-          <div>
-            <h3 className="text-sm font-bold text-gov-text-heading mb-1">Audit Advisory</h3>
-            <p className="text-xs text-gov-text-body leading-relaxed">
-              High-intensity clusters detected in **Northern Karnataka** (Kalaburagi, Bidar). Recommended action: 
-              Deploy additional field verification units for PM-KISAN scheme audits in these zones.
+          <div className="bg-gov-accent p-2 rounded shadow-sm">
+            <Sparkles size={16} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-black text-gov-text-heading mb-1 uppercase tracking-widest">AI Predictive Geo-Analyst</h3>
+            <p className="text-sm font-medium text-gov-text-heading leading-relaxed border-l-2 border-gov-accent pl-4 py-1 italic">
+              {aiAnalysis || "Synthesizing regional fraud density models..."}
             </p>
           </div>
         </div>
