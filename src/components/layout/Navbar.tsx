@@ -4,11 +4,11 @@ export function Navbar() {
   return (
     <nav className="h-16 bg-navy flex items-center justify-between px-6 border-b border-navy-light fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center gap-3">
-        <AshokChakra size={28} className="text-saffron" />
+        <img src="/src/assets/new_logo.png" alt="GIA Shield Logo" className="h-10 w-auto object-contain" />
         <div className="flex flex-col">
-          <span className="text-primary-foreground text-lg font-semibold leading-tight">GIA Shield</span>
-          <span className="text-[11px] text-primary-foreground/50 leading-tight">
-            Government Integrated Audit — Beneficiary Fraud Detection System
+          <span className="text-[#C8922A] text-xl font-black tracking-tighter uppercase leading-tight drop-shadow-sm">GIA Shield</span>
+          <span className="text-[10px] text-white/40 uppercase font-bold leading-tight tracking-widest">
+            Government Integrated Audit Unit
           </span>
         </div>
       </div>

@@ -142,6 +142,17 @@ export const FraudNetwork = () => {
         .style('background', '#0f172a')
         .style('border-radius', '12px');
 
+      // Add an interactive generic container for pan & zoom capability 
+      const g = svg.append('g');
+
+      const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.1, 5])
+        .on('zoom', (event) => {
+           g.attr('transform', event.transform);
+        });
+
+      svg.call(zoom);
+
       // Glow filter
       const defs = svg.append('defs');
       const filter = defs.append('filter').attr('id', 'glow');
@@ -155,12 +166,15 @@ export const FraudNetwork = () => {
       const simulation = d3.forceSimulation(nodes)
         .force('link', d3.forceLink<Node, Link>(links)
           .id(d => d.id)
-          .distance(150))
-        .force('charge', d3.forceManyBody().strength(-400))
-        .force('center', d3.forceCenter(width / 2, height / 2));
+          .distance(100))
+        .force('charge', d3.forceManyBody().strength(-150))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('x', d3.forceX(width / 2).strength(0.1))
+        .force('y', d3.forceY(height / 2).strength(0.1))
+        .force('collide', d3.forceCollide().radius(22).iterations(2));
 
       // Draw links
-      const link = svg.append('g')
+      const link = g.append('g')
         .selectAll('line')
         .data(links)
         .enter().append('line')
@@ -170,21 +184,21 @@ export const FraudNetwork = () => {
         .style('filter', 'url(#glow)');
 
       // Link labels
-      const linkLabel = svg.append('g')
+      const linkLabel = g.append('g')
         .selectAll('text')
         .data(links)
         .enter().append('text')
-        .attr('font-size', '10px')
+        .attr('font-size', '9px')
         .attr('fill', '#94a3b8')
         .attr('text-anchor', 'middle')
         .text(d => d.label);
 
       // Draw nodes
-      const node = svg.append('g')
+      const node = g.append('g')
         .selectAll('circle')
         .data(nodes)
         .enter().append('circle')
-        .attr('r', 22)
+        .attr('r', 16)
         .attr('fill', d => d.flagged ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)')
         .attr('stroke', d => d.flagged ? '#ef4444' : '#22c55e')
         .attr('stroke-width', 2)
@@ -195,17 +209,18 @@ export const FraudNetwork = () => {
           .on('end', dragended) as any);
 
       // Node labels
-      const label = svg.append('g')
+      const label = g.append('g')
         .selectAll('text')
         .data(nodes)
         .enter().append('text')
-        .attr('font-size', '11px')
+        .attr('font-size', '10px')
         .attr('fill', '#e2e8f0')
         .attr('text-anchor', 'middle')
-        .attr('dy', '35px')
+        .attr('dy', '28px')
         .text(d => d.name.split(' ')[0]);
 
       simulation.on('tick', () => {
+
         link
           .attr('x1', d => (d.source as any).x)
           .attr('y1', d => (d.source as any).y)

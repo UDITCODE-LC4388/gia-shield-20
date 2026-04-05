@@ -1,8 +1,13 @@
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
-import { Brain, TrendingUp, Zap, Target } from "lucide-react";
+import { Brain, TrendingUp, Zap, Target, Check, Sparkles } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 const performanceData = [
   { name: "Week 1", score: 65, efficiency: 40 },
@@ -19,6 +24,29 @@ const schemeDistribution = [
 ];
 
 export default function SchemeOptimizer() {
+  const [isApplied, setIsApplied] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getStrategy() {
+      if (USE_MOCKS || !GEMINI_API_KEY) {
+        setAiSummary("AI Analysis suggests reallocating 15% of surplus budget from NREGA and PMFBY due to low baseline optimization scores (45-65%) and injecting it into Ujjwala networks to maximize their high 90% active utilization threshold.");
+        return;
+      }
+      try {
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = `Act as an AI Scheme Optimization engine. Based on these metrics: ${JSON.stringify(schemeDistribution)}, recommend a strategic reallocation of funds in 2 sentences. Name the specific schemes you are moving budget from and to.`;
+        const response = await model.generateContent(prompt);
+        setAiSummary(response.response.text());
+      } catch (e) {
+        const fallback = "AI Analysis suggests reallocating 15% of surplus budget from NREGA and PMFBY due to low baseline optimization scores (45-65%) and injecting it into Ujjwala networks to maximize their high 90% active utilization threshold.";
+        setAiSummary(fallback);
+      }
+    }
+    getStrategy();
+  }, []);
+
   return (
     <AppLayout>
       <PageHeader 
@@ -30,7 +58,7 @@ export default function SchemeOptimizer() {
         <MetricCard icon={Brain} value="94.2%" label="Optimization Accuracy" />
         <MetricCard icon={TrendingUp} value="+18%" label="Resource Efficiency" />
         <MetricCard icon={Target} value="2.4k" label="Corrected Allocations" />
-        <MetricCard icon={Zap} value="实时" label="Live Decision Stream" />
+        <MetricCard icon={Zap} value="Live" label="Live Decision Stream" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-12">
@@ -78,14 +106,21 @@ export default function SchemeOptimizer() {
       </div>
 
       <div className="card-gov border-l-4 border-gov-success">
-         <h3 className="text-sm font-bold text-gov-text-heading mb-2">Smart Recommendation</h3>
-         <p className="text-xs text-gov-text-body leading-relaxed">
-            AI analysis suggests reallocating 15% of surplus budget from **Low-Risk** districts in the Coastal region to 
-            **High-Demand** agricultural zones in the North-East. 
-            Estimated impact: **9.4% increase in beneficiary satisfaction.**
+         <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={16} className="text-gov-accent" />
+            <h3 className="text-sm font-bold text-gov-text-heading mb-0">Core AI Strategic Recommendation</h3>
+         </div>
+         <p className="text-sm font-medium text-gov-text-heading leading-relaxed border-l-2 border-gov-accent pl-4 py-2 bg-navy/5 rounded-r">
+            {aiSummary || "Crunching state optimization differentials..."}
          </p>
-         <button className="mt-4 bg-gov-success text-white px-4 py-1.5 rounded text-[11px] font-bold tracking-widest uppercase hover:opacity-90 shadow-sm transition-all active:scale-95">
-           Apply Allocation Strategy
+         <button 
+           onClick={() => setIsApplied(true)}
+           disabled={isApplied}
+           className={`mt-4 px-4 py-1.5 rounded text-[11px] font-bold tracking-widest uppercase shadow-sm transition-all flex items-center justify-center gap-2 ${
+             isApplied ? 'bg-gov-success text-white opacity-80 cursor-not-allowed' : 'bg-gov-success text-white hover:opacity-90 active:scale-95'
+           }`}
+         >
+           {isApplied ? <><Check size={14} /> Strategy Applied</> : "Apply Allocation Strategy"}
          </button>
       </div>
     </AppLayout>
