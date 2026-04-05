@@ -38,27 +38,39 @@ export const FraudNetwork = () => {
       try {
         setLoading(true);
         if (USE_MOCKS) {
-          const mockPeople: Beneficiary[] = [
-            { aadhaar_hash: "H1", full_name: "Ramesh P.", district: "Mysuru", phone: "9876543100", bank_account: "B1" },
-            { aadhaar_hash: "H2", full_name: "Anita B.", district: "Belagavi", phone: "9876543100", bank_account: "B2" },
-            { aadhaar_hash: "H3", full_name: "Suresh M.", district: "Kalaburagi", phone: "9876543101", bank_account: "B1" },
-            { aadhaar_hash: "H4", full_name: "Lakshmi R.", district: "Bidar", phone: "9876543102", bank_account: "B3" },
-            { aadhaar_hash: "H5", full_name: "Mahesh P.", district: "Tumakuru", phone: "9876543102", bank_account: "B3" }
-          ];
-          
-          const nodes: Node[] = mockPeople.map(p => ({
-            id: p.aadhaar_hash, name: p.full_name, district: p.district, phone: p.phone, bank: p.bank_account, flagged: false
+          // Procedurally generate the massive 99-node structural neural network
+          const nodes: Node[] = Array.from({ length: 99 }).map((_, i) => ({
+            id: `N${i}`,
+            name: `UID_${(1000 + i)}`,
+            district: ["Belagavi", "Mysuru", "Bidar", "Kalaburagi"][i % 4],
+            phone: `P_${Math.floor(i / 4)}`, // Clusters of 4 share a phone
+            bank: `B_${Math.floor(i / 6)}`,  // Clusters of 6 share a bank
+            flagged: false
           }));
 
-          const links: Link[] = [
-            { source: "H1", target: "H2", type: "PHONE", label: "Shared Phone" } as Link,
-            { source: "H1", target: "H3", type: "BANK", label: "Shared Bank" } as Link,
-            { source: "H4", target: "H5", type: "PHONE", label: "Shared Phone" } as Link,
-            { source: "H4", target: "H5", type: "BANK", label: "Shared Bank" } as Link
-          ];
+          const links: Link[] = [];
+          for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+              if (nodes[i].phone === nodes[j].phone && Math.random() > 0.3) {
+                links.push({ source: nodes[i].id, target: nodes[j].id, type: 'PHONE', label: 'Shared Phone' } as Link);
+              }
+              if (nodes[i].bank === nodes[j].bank && Math.random() > 0.4) {
+                links.push({ source: nodes[i].id, target: nodes[j].id, type: 'BANK', label: 'Shared Bank' } as Link);
+              }
+            }
+          }
 
+          // Ensure exactly 142 connections form
+          while(links.length > 142) links.pop();
+
+          // Flag interconnected entities to render red
+          const flaggedIds = links.flatMap(l => [
+            typeof l.source === 'string' ? l.source : (l.source as any).id,
+            typeof l.target === 'string' ? l.target : (l.target as any).id
+          ]);
+          
           nodes.forEach(n => {
-            if (["H1", "H2", "H3", "H4", "H5"].includes(n.id)) n.flagged = true;
+            if (flaggedIds.includes(n.id)) n.flagged = true;
           });
 
           drawNetwork(nodes, links);
