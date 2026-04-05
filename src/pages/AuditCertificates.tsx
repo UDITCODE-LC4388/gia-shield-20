@@ -12,8 +12,9 @@ interface AuditRecord {
   verified_at: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 export default function AuditCertificates() {
   const [certs, setCerts] = useState<AuditRecord[]>([]);
@@ -23,12 +24,21 @@ export default function AuditCertificates() {
     async function fetchCerts() {
       try {
         setLoading(true);
+        if (USE_MOCKS) {
+          setCerts([
+            { id: "1", beneficiary_name: "Ramesh Kumar Patil", aadhaar_hash: "AADH201", verdict: "FLAGGED", verified_at: new Date().toISOString() },
+            { id: "2", beneficiary_name: "Anita B. Deshmukh", aadhaar_hash: "AADH202", verdict: "ELIGIBLE", verified_at: new Date(Date.now() - 3600000).toISOString() },
+            { id: "3", beneficiary_name: "Suresh M. Naik", aadhaar_hash: "AADH203", verdict: "CRITICAL", verified_at: new Date(Date.now() - 7200000).toISOString() }
+          ]);
+          return;
+        }
+
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/verifications?order=verified_at.desc&select=id,aadhaar_hash,beneficiary_name,verdict,verified_at`,
           { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }}
         );
         const data = await res.json();
-        setCerts(data);
+        setCerts(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error(e);
       } finally {

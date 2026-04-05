@@ -24,8 +24,9 @@ interface Link extends d3.SimulationLinkDatum<Node> {
   label: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 export const FraudNetwork = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,6 +37,35 @@ export const FraudNetwork = () => {
     async function fetchDataAndDraw() {
       try {
         setLoading(true);
+        if (USE_MOCKS) {
+          const mockPeople: Beneficiary[] = [
+            { aadhaar_hash: "H1", full_name: "Ramesh P.", district: "Mysuru", phone: "9876543100", bank_account: "B1" },
+            { aadhaar_hash: "H2", full_name: "Anita B.", district: "Belagavi", phone: "9876543100", bank_account: "B2" },
+            { aadhaar_hash: "H3", full_name: "Suresh M.", district: "Kalaburagi", phone: "9876543101", bank_account: "B1" },
+            { aadhaar_hash: "H4", full_name: "Lakshmi R.", district: "Bidar", phone: "9876543102", bank_account: "B3" },
+            { aadhaar_hash: "H5", full_name: "Mahesh P.", district: "Tumakuru", phone: "9876543102", bank_account: "B3" }
+          ];
+          
+          const nodes: Node[] = mockPeople.map(p => ({
+            id: p.aadhaar_hash, name: p.full_name, district: p.district, phone: p.phone, bank: p.bank_account, flagged: false
+          }));
+
+          const links: Link[] = [
+            { source: "H1", target: "H2", type: "PHONE", label: "Shared Phone" } as Link,
+            { source: "H1", target: "H3", type: "BANK", label: "Shared Bank" } as Link,
+            { source: "H4", target: "H5", type: "PHONE", label: "Shared Phone" } as Link,
+            { source: "H4", target: "H5", type: "BANK", label: "Shared Bank" } as Link
+          ];
+
+          nodes.forEach(n => {
+            if (["H1", "H2", "H3", "H4", "H5"].includes(n.id)) n.flagged = true;
+          });
+
+          drawNetwork(nodes, links);
+          setLoading(false);
+          return;
+        }
+
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/beneficiaries?select=*`,
           { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }}

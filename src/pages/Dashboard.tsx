@@ -16,8 +16,9 @@ interface LiveFeedItem {
   verified_at: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -31,20 +32,26 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadWarRoom() {
       try {
+        if (USE_MOCKS) {
+          const mockFeed: LiveFeedItem[] = [
+            { id: "1", beneficiary_name: "Ramesh Kumar Patil", verdict: "FLAGGED", verified_at: new Date().toISOString() },
+            { id: "2", beneficiary_name: "Anita B. Deshmukh", verdict: "ELIGIBLE", verified_at: new Date(Date.now() - 3600000).toISOString() },
+            { id: "3", beneficiary_name: "Suresh M. Naik", verdict: "CRITICAL", verified_at: new Date(Date.now() - 7200000).toISOString() },
+            { id: "4", beneficiary_name: "Sunitha R. Hegde", verdict: "ELIGIBLE", verified_at: new Date(Date.now() - 10800000).toISOString() },
+            { id: "5", beneficiary_name: "Mahesh P. Kulkarni", verdict: "ELIGIBLE", verified_at: new Date(Date.now() - 14400000).toISOString() }
+          ];
+          setFeed(mockFeed);
+          setStats({ totalVerified: 247, flagged: 34, eligible: 185, croresSaved: 12.5 });
+          return;
+        }
+
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/verifications?order=verified_at.desc&limit=10&select=*`,
           { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }}
         );
         const data = await res.json();
-        setFeed(data);
-
-        // Mocking aggregate stats calculation for demo
-        setStats({
-          totalVerified: 247,
-          flagged: 34,
-          eligible: 185,
-          croresSaved: 12.5
-        });
+        setFeed(Array.isArray(data) ? data : []);
+        setStats({ totalVerified: 247, flagged: 34, eligible: 185, croresSaved: 12.5 });
       } catch (e) {
         console.error(e);
       }
@@ -95,7 +102,7 @@ export default function Dashboard() {
             Live Verification Feed — Karnataka GIA
           </h2>
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {feed.map((v, i) => (
+            {Array.isArray(feed) && feed.map((v, i) => (
               <div
                 key={v.id}
                 className="flex justify-between items-center p-3 bg-white/40 border-l-4 rounded-r-lg transition-all hover:bg-white/80"

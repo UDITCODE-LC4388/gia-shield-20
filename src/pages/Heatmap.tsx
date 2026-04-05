@@ -4,8 +4,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { DistrictGridMap } from "@/components/charts/DistrictGridMap";
 import { Map, AlertCircle } from "lucide-react";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xumlcfkmrlbwarbarpha.supabase.co";
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
 interface DistrictStats {
   district: string;
@@ -30,7 +31,19 @@ export default function Heatmap() {
     async function loadHeatmapData() {
       try {
         setLoading(true);
-        // Fetch all verifications and beneficiaries
+        if (USE_MOCKS) {
+          const mockStats = [
+            { district: "Belagavi", rate: 87, fraud: 15, total: 17 },
+            { district: "Raichur", rate: 76, fraud: 11, total: 14 },
+            { district: "Kalaburagi", rate: 71, fraud: 18, total: 25 },
+            { district: "Ballari", rate: 64, fraud: 9, total: 14 },
+            { district: "Yadgir", rate: 58, fraud: 7, total: 12 }
+          ];
+          setDistrictStats(mockStats);
+          setLoading(false);
+          return;
+        }
+
         const [vRes, bRes] = await Promise.all([
           fetch(`${SUPABASE_URL}/rest/v1/verifications?select=aadhaar_hash,verdict`, { 
             headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } 
