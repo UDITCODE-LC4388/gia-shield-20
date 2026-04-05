@@ -166,12 +166,10 @@ export const FraudNetwork = () => {
       const simulation = d3.forceSimulation(nodes)
         .force('link', d3.forceLink<Node, Link>(links)
           .id(d => d.id)
-          .distance(100))
-        .force('charge', d3.forceManyBody().strength(-150))
+          .distance(200))
+        .force('charge', d3.forceManyBody().strength(-800))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('x', d3.forceX(width / 2).strength(0.1))
-        .force('y', d3.forceY(height / 2).strength(0.1))
-        .force('collide', d3.forceCollide().radius(22).iterations(2));
+        .force('collide', d3.forceCollide().radius(40).iterations(3));
 
       // Draw links
       const link = g.append('g')
